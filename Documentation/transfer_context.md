@@ -1,0 +1,104 @@
+# PCP Nexus Development Transfer Context
+
+**Conversation ID:** `6c99d582-6abb-45f1-9b0c-f2937f5ef927`  
+**Date:** 2026-02-04  
+**Status:** Ready for final test, then Inno Setup installer build
+
+---
+
+## Summary of Work Completed
+
+### Phase 8: Real-Time Data Export & Dashboard Enhancements
+
+#### ✅ Completed Changes
+
+1. **Dashboard Refresh Rate** - Changed from 4s to 10s in `dashboard_generator.py` (line 51)
+
+2. **Export CSV Button** - Added JavaScript-based CSV export for 24-hour activity log
+
+3. **Open Output Folder Button** - NEW: Added `📂 Open Output Folder` button that opens `file:///` link to output directory
+
+4. **Clickable File Links** - Filenames in activity log are now clickable `file:///` links
+
+5. **Real-Time CSV/Excel Exports** - `realtime_exporter.py`:
+   - Creates `pcp_activity_YYYYMMDD.csv` and `.xlsx` in Output folder
+   - Exports on each job status update
+   - Excel has styled headers and auto-adjusted column widths
+
+6. **Comment Fields Added** - Both CSV and Excel exports include:
+   - `Has_Comments` column ("Yes"/"No")
+   - `Comments` column (actual comment text)
+
+7. **Prefix Columns Added**:
+   - `Orig_Prefix` - First 4 chars of original filename
+   - `New_Prefix` - AXnn regex pattern from final filename
+
+8. **Metadata Key Standardization** - Dashboard and exporter now use consistent fallbacks:
+   ```python
+   envelope_id = meta.get('envelope_num', meta.get('envelope_id', '-'))
+   lead_doc = meta.get('lead_doc', meta.get('lead_document', meta.get('subject', '-')))
+   ```
+
+---
+
+## Files Modified
+
+| File | Changes |
+|------|---------|
+| `core/dashboard_generator.py` | Refresh rate, export button, output folder button, metadata keys |
+| `core/realtime_exporter.py` | Excel export, comment columns, prefix extraction |
+| `core/reporter.py` | (Planned: add prefix and comment columns) |
+
+---
+
+## Current State
+
+- **Database:** Cleared and ready for fresh test
+- **Dashboard:** Cleared
+- **Export Files:** Cleared
+- **Email Categories:** Reset (94 emails ready to process)
+
+---
+
+## Next Steps
+
+1. **Final Test Run:**
+   - Launch app as Admin
+   - Verify dashboard shows correct prefixes
+   - Verify CSV/Excel exports have matching data
+   - Verify "Open Output Folder" button works
+   - Verify comments appear in exports
+
+2. **Inno Setup Installer Build:**
+   - After verification passes
+   - Use existing `pcp_nexus_fixed.spec` for PyInstaller
+   - Create Inno Setup script for professional installer
+
+---
+
+## Key File Paths
+
+```
+Source Code:     C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator\
+Database:        C:\ProgramData\PCP-Automation\data\nexus.db
+Dashboard:       C:\ProgramData\PCP-Automation\Dashboard\dashboard.html
+Logs:            C:\Homebrew Apps\PCP New\Logs\
+Output Folder:   C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator\Output\
+```
+
+---
+
+## Utility Scripts
+
+- `clear_db_utility.py` - Clears database (run as Admin)
+- `reset_categories.py` - Resets Outlook email categories for re-processing
+- `verify_comments_diag.py` - Diagnoses comment extraction in database
+- `inject_emails.py` - For testing email processing
+
+---
+
+## Known Issues / Notes
+
+- Outlook must be running and accessible for app to work
+- App must run as Administrator for database access
+- Comments ARE being extracted successfully (e.g., "THANK YOU FOR E-FILING/ EROMERO")

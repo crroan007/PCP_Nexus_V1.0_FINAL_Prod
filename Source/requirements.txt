@@ -1,0 +1,29 @@
+# Core Dependencies
+pywin32>=305
+watchdog>=3.0.0
+requests>=2.31.0
+cryptography>=41.0.0
+keyring>=24.0.0
+
+# PDF Processing
+pypdf>=3.17.0
+PyPDF2>=3.0.1
+PyMuPDF>=1.23.0  # fitz
+
+# Image/OCR
+Pillow>=10.0.0
+easyocr>=1.7.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+
+# Web Scraping
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Fuzzy Matching
+thefuzz>=0.20.0
+
+# Build Tool
+pyinstaller>=6.0.0

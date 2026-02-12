@@ -1,0 +1,14 @@
+LOCALAPPDATA: C:\Users\Kado\AppData\Local
+Scanning for config files...
+
+[FOUND] C:\ProgramData\PCP-Automation\config.json
+  Phase1.Output: D:/Homebrew Apps/PCP Nexus Final/Test Outputs
+  Phases.Phase1.OutputPath: D:/Homebrew Apps/PCP Nexus Final/Test Outputs
+[MISSING] C:\Users\Kado\AppData\Local\PCP-Automation\config.json
+[MISSING] D:\Homebrew Apps\PCP V1.0 (final) - Copy\PCP_USB_Backup_v1.0\Source\config.json
+[MISSING] D:\Homebrew Apps\PCP V1.0 (final) - Copy\PCP_USB_Backup_v1.0\Source\config.json
+
+Testing SecureConfig Class Resolution:
+SecureConfig.config_path: C:\ProgramData\PCP-Automation\config.json
+Phase1.Output via SecureConfig: D:/Homebrew Apps/PCP Nexus Final/Test Outputs
+PCP_DATA_DIR Env Var: Not Set

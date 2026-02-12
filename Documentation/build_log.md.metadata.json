@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_OTHER",
+  "summary": "Build log documenting the successful PyInstaller build of PCP Nexus with runtime fixes, including Tcl/Tk path corrections and dependency notes.",
+  "updatedAt": "2026-02-04T04:57:03.114943100Z"
+}

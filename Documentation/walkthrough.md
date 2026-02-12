@@ -1,0 +1,111 @@
+# Debugging Live Run Issues - Resolution Walkthrough
+
+This walkthrough covers the fixes for the unexpected PowerShell windows, dashboard unavailability, and the "Move to Exceptions" loop.
+
+## Fixes Implemented
+
+### 1. PowerShell Window Suppression
+The `LinkDownloader` class now uses `subprocess.STARTUPINFO` with `SW_HIDE` and the correct `STARTF_USESHOWWINDOW` flag to ENSURE that PowerShell windows do not appear during the file download cycle.
+
+```python
+# link_downloader.py
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW # Fixed typo
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
+result = subprocess.run(
+    ...,
+    startupinfo=startupinfo,
+    creationflags=subprocess.CREATE_NO_WINDOW
+)
+```
+
+### 2. Dashboard Standby Screen
+The `dashboard_generator` now provides a "Standby" HTML page if the database is not yet ready or is empty. This prevents the "Not Available" message box in the UI and gives the user visual feedback.
+
+### 3. Exception Loop Resolution
+A critical issue moved all emails to "Exceptions" due to a `subprocess` constant typo and variable shadowing in `hunter_v2.py`. These have been fixed:
+- Corrected `STARTFLAGS_USESHOWWINDOW` to `STARTF_USESHOWWINDOW`.
+- Ensured `email_metadata` is correctly scoped for job creation.
+
+### 4. SharePoint Logger Schema Fix
+Resolved a corruption in `sharepoint_logger.py` where the `FIELDNAMES` list was improperly formatted.
+
+### 5. Real-Time Data Export (Phase 8)
+Implemented comprehensive export system:
+- **CSV Export**: 8 simplified columns for import compatibility (only for ARCHIVED status)
+- **Excel Export**: 14 detailed columns with styling for audit/review
+- **Dashboard Export Button**: Fixed CSV header mismatch (13 columns: includes Orig Prefix, New Prefix)
+
+**Export Columns:**
+| CSV (8 cols) | Excel (14 cols) |
+|--------------|-----------------|
+| Envelope_Num | ID, Timestamp, Filename, Envelope_ID |
+| Case_Num | Case_Number, Lead_Doc, Orig_Input |
+| Date/Time Submitted | Orig_Prefix, New_Prefix, Status |
+| Date/Time Accepted | Outcome, Next_Steps |
+| Lead_Document | Has_Comments, Comments |
+| PCP_Job_Num | |
+
+## Verification Results
+
+### Success Metrics
+- [x] **Subprocess Silence**: Verified `STARTF_USESHOWWINDOW` integration.
+- [x] **Intake Resilience**: Variable scoping fix prevents `create_job` crashes.
+- [x] **Dashboard Accessibility**: Standby page verified for empty states.
+- [x] **Export System**: CSV/Excel exports properly with all columns.
+- [x] **Dashboard Export Button**: Fixed header alignment with table columns.
+- [x] **Email Auto-Detection**: Outlook account auto-fills and folders populate on launch.
+
+---
+
+### 6. Email Account Auto-Detection (Phase 9)
+On app startup, PCP Nexus now automatically:
+1. Detects the primary Outlook email account from Windows
+2. Populates the email account field in Settings
+3. Silently connects and populates folder dropdowns
+
+**Implementation:**
+```python
+# tk_app.py - Called 200ms after startup
+self.root.after(200, self._auto_detect_outlook_account)
+```
+
+**New Methods:**
+- `_auto_detect_outlook_account()` - Detects email via COM, sets `var_outlook_account`
+- `_auto_test_connection()` - Silent folder enumeration (no popups)
+
+---
+
+### 7. App Startup Hardening (Phase 10)
+
+**Auto-Kill Previous Instances:**
+```python
+# main.py - Uses psutil to find and kill prior PCP processes
+for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+    if 'pcp_nexus' in pname or ('python' in pname and 'main.py' in cmdline):
+        proc.kill()
+```
+
+**Admin Elevation:**
+- App checks `IsUserAnAdmin()` at startup
+- If not admin, re-launches via `ShellExecuteW` with 'runas' verb (triggers UAC)
+- Non-admin process exits after elevated process launches
+
+**Outlook Detection Without Launch:**
+- Uses `GetActiveObject("Outlook.Application")` instead of `Dispatch`
+- Shows error if Outlook Classic isn't running (doesn't try to launch it)
+
+**Fixed Prefix Extraction (Column H):**
+```python
+# realtime_exporter.py - Fixed to use regex search
+orig_prefix_match = re.search(r'(AX\d{2})', orig_input, re.IGNORECASE)
+orig_prefix = orig_prefix_match.group(1).upper() if orig_prefix_match else "-"
+```
+
+---
+**Status: PHASE 10 COMPLETE**
+
+Output files location: `C:\ProgramData\PCP-Automation\Output\`
+- `pcp_activity_YYYYMMDD.csv` - Simplified 8-column format
+- `pcp_activity_YYYYMMDD.xlsx` - Full 14-column format with styling

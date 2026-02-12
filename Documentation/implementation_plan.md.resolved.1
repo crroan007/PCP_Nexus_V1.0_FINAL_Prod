@@ -1,0 +1,36 @@
+# Fix Naming Logic and Configuration Access
+
+The purpose of this change is to ensure that files processed by PCP Nexus are named correctly according to the project specifications. Currently, Phase 1 documents (Affidavits) are being incorrectly named using Phase 2 logic (AX40 + Envelope ID) because the application cannot find the renaming rules in the configuration file.
+
+## User Review Required
+
+> [!IMPORTANT]
+> This change modifies how output files are named. Phase 1 documents will now correctly use the `AX42`, `AX43`, `AX47`, or `AX89` prefixes followed by the PCP Job Number, rather than `AX40` followed by the Envelope ID.
+
+## Proposed Changes
+
+### Orchestrator Agents
+
+#### [MODIFY] [hunter_v2.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py)
+- Update [_process_envelope_complete](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#570-994) to use [naming_rules](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/clerk.py#24-45) from the root of the configuration.
+- Enhance [_download_message_parts](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#1045-1133) to better identify source prefixes.
+- Refine the naming branching logic to correctly distinguish between Phase 1 (Affidavit transformation) and Phase 2 (Petition naming).
+
+```python
+# Pseudo-code update for naming logic
+if lead_prefix in rename_rules:
+    final_prefix = rename_rules[lead_prefix]
+    # ... use Job Number ...
+elif lead_prefix.startswith("AX") and lead_prefix != "AX40":
+    # It's a Phase 1 doc but might not be in the map yet or already transformed
+    final_prefix = lead_prefix 
+```
+
+## Verification Plan
+
+### Automated Tests
+- I will run the engine and monitor the logs to ensure that an incoming "Filing Accepted" email for an AX09 document results in an `AX89` output file using the Job Number, not `AX40` with the Envelope ID.
+
+### Manual Verification
+- Verify the `3- AI Completed` folder in Outlook to ensure emails are being moved.
+- Verify the `Documents` folder to ensure files are named correctly (e.g., `AX42A25C07678.pdf`).

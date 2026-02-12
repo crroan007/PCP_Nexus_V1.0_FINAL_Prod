@@ -1,0 +1,50 @@
+# Debugging Live Run Issues - Resolution Walkthrough
+
+This walkthrough covers the fixes for the unexpected PowerShell windows, dashboard unavailability, and the "Move to Exceptions" loop.
+
+## Fixes Implemented
+
+### 1. PowerShell Window Suppression
+The [LinkDownloader](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py#15-232) class now uses `subprocess.STARTUPINFO` with `SW_HIDE` and the correct `STARTF_USESHOWWINDOW` flag to ENSURE that PowerShell windows do not appear during the file download cycle.
+
+```python
+# link_downloader.py
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW # Fixed typo
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
+result = subprocess.run(
+    ...,
+    startupinfo=startupinfo,
+    creationflags=subprocess.CREATE_NO_WINDOW
+)
+```
+
+### 2. Dashboard Standby Screen
+The `dashboard_generator` now provides a "Standby" HTML page if the database is not yet ready or is empty. This prevents the "Not Available" message box in the UI and gives the user visual feedback.
+
+### 3. Exception Loop Resolution
+A critical issue moved all emails to "Exceptions" due to a `subprocess` constant typo and variable shadowing in [hunter_v2.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py). These have been fixed:
+- Corrected `STARTFLAGS_USESHOWWINDOW` to `STARTF_USESHOWWINDOW`.
+- Ensured `email_metadata` is correctly scoped for job creation.
+
+### 4. SharePoint Logger Schema Fix
+Resolved a corruption in [sharepoint_logger.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/sharepoint_logger.py) where the `FIELDNAMES` list was improperly formatted.
+
+## Verification Results
+
+### Success Metrics
+- [x] **Subprocess Silence**: Verified `STARTF_USESHOWWINDOW` integration.
+- [x] **Intake Resilience**: Variable scoping fix prevents [create_job](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/job_manager.py#124-145) crashes.
+- [x] **Dashboard Accessibility**: Standby page verified for empty states.
+
+---
+---
+**Status: READY FOR FINAL VERIFICATION**
+
+### Final Reset Procedure
+1. **Close PCP Nexus**: The database is locked while the app is active.
+2. **Clear Database**: I will wipe the [jobs](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/verify_comments_diag.py#7-39) table to ensure a clean status report.
+3. **Move Emails**: Move target emails to the Inbox.
+4. **Remove Categories**: Ensure emails do not have the `PCP-Processed` category (otherwise they will be skipped).
+5. **Restart & Monitor**: Start the app and verify real-time logs in `C:\Homebrew Apps\PCP New\Logs`.

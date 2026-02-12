@@ -1,0 +1,102 @@
+# Email Account Auto-Detection Plan
+
+## Goal
+When PCP Nexus launches, automatically detect the Outlook email account and test the connection to populate folder dropdowns, eliminating the need for manual setup.
+
+---
+
+## Current Behavior
+1. App loads → [_refresh_settings_from_config()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#532-560) gets `outlook_account` from config (often empty)
+2. User must manually enter email address
+3. User must click "Test Connection" button
+4. Then folder dropdowns are populated
+
+## Proposed Change
+1. App loads → Load config (may have saved account)
+2. **NEW**: If account is empty OR on first run, auto-detect from Outlook
+3. **NEW**: Automatically trigger Test Connection in background
+4. Folder dropdowns populated automatically
+
+---
+
+## Proposed Changes
+
+### [MODIFY] [tk_app.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py)
+
+#### 1. Add `_auto_detect_outlook_account()` method
+New method that runs in a background thread to detect the primary Outlook account:
+```python
+def _auto_detect_outlook_account(self) -> None:
+    """Auto-detect Outlook account and trigger connection test."""
+    def worker():
+        detected_email = None
+        try:
+            import pythoncom
+            pythoncom.CoInitialize()
+            import win32com.client
+            
+            outlook = win32com.client.Dispatch("Outlook.Application")
+            namespace = outlook.GetNamespace("MAPI")
+            
+            # Get first account's SMTP address
+            for acc in namespace.Accounts:
+                try:
+                    detected_email = acc.SmtpAddress
+                    break
+                except:
+                    continue
+        except Exception as e:
+            self._log(f"Auto-detect warning: {e}", "WARN")
+        finally:
+            try: pythoncom.CoUninitialize()
+            except: pass
+        
+        def finish():
+            if detected_email:
+                current = self.var_outlook_account.get().strip()
+                if not current:
+                    self.var_outlook_account.set(detected_email)
+                    self._log(f"Auto-detected Outlook account: {detected_email}", "INFO")
+                # Trigger connection test silently
+                self.root.after(500, self._auto_test_connection)
+        
+        self.root.after(0, finish)
+    
+    threading.Thread(target=worker, daemon=True, name="OutlookAutoDetect").start()
+```
+
+#### 2. Add `_auto_test_connection()` method
+Silent version of Test Connection that doesn't show messageboxes:
+```python
+def _auto_test_connection(self) -> None:
+    """Silently test Outlook connection and populate dropdowns."""
+    account_name = self.var_outlook_account.get().strip()
+    if not account_name:
+        self._log("No Outlook account configured, skipping auto-connect.", "WARN")
+        return
+    
+    # Same as _test_outlook_connection but silent (no messageboxes)
+    # ... implementation mirrors _test_outlook_connection without messagebox calls
+```
+
+#### 3. Update [__init__()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#22-31) to call auto-detect on startup
+After [_refresh_settings_from_config()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#532-560), schedule auto-detection:
+```python
+# After line 56:
+self.root.after(200, self._auto_detect_outlook_account)
+```
+
+---
+
+## Verification Plan
+
+### Manual Testing
+1. Delete `outlook_account` from config.json
+2. Launch app → Should auto-detect email and populate dropdowns
+3. Verify folder dropdowns have values
+4. Restart app → Should reconnect automatically using saved account
+
+### Edge Cases
+- No Outlook installed → Should show warning in console, not crash
+- Multiple Outlook accounts → Uses first account (can be overridden manually)
+- Outlook not running → COM should start it automatically

@@ -1,0 +1,34 @@
+# Live Run Issue Resolution
+
+This plan addresses the critical issues reported during live testing, specifically the "Move to Exceptions" failure caused by a code regression and variable scoping issues.
+
+## Proposed Changes
+
+### [Component] Link Downloader
+#### [MODIFY] [link_downloader.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py)
+*   Fix incorrect `subprocess` constant name: change `STARTFLAGS_USESHOWWINDOW` to `STARTF_USESHOWWINDOW`.
+*   Maintain `SW_HIDE` and `STARTUPINFO` logic for window suppression.
+
+### [Component] Hunter Agent
+#### [MODIFY] [hunter_v2.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py)
+*   Fix variable scoping in [create_job](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/job_manager.py#124-145) calls: ensure `email_metadata` is used instead of the potentially shadowed or undefined `metadata` variable.
+*   Update logging to better track download failures.
+
+### [Component] SharePoint Logger
+#### [MODIFY] [sharepoint_logger.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/sharepoint_logger.py)
+*   (Completed) Fixed schema corruption in `FIELDNAMES`.
+
+### [Component] Dashboard Generator
+#### [MODIFY] [dashboard_generator.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py)
+*   (Completed) Improved [generate_dashboard](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py#362-772) to return fallback template when DB is empty.
+
+## Verification Plan
+
+### Automated Verification
+*   Verify code compiles and `subprocess` constants are valid via a small test script.
+*   Monitor [agent_trace.log](file:///C:/ProgramData/PCP-Automation/Logs/agent_trace.log) for successful downloads after the fix.
+
+### Manual Verification
+*   User will run the app as Administrator and confirm that emails are processed (Moved to "Completed" or "Staging") instead of "Exceptions".
+*   Verify the Dashboard shows "SUCCESS" jobs.
+

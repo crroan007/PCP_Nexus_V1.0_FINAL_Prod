@@ -1,0 +1,295 @@
+# PCP Nexus Runtime Issues Fix - Implementation Plan
+
+## Problem Statement
+
+The installed/frozen version of PCP Nexus launches successfully (Tcl/Tk bundling is working), but has critical runtime issues:
+1. **UI Freezing**: Clicking certain buttons (Test Connection, Dashboard) causes the application to freeze
+2. **Email Processing Failures**: Email processing not working correctly in frozen mode
+
+## Root Cause Analysis
+
+### Issue 1: COM Threading Conflicts (UI Freezing)
+**Root Cause**: The [_test_outlook_connection()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#237-290) button handler calls `pythoncom.CoInitialize()` directly on the UI thread, which:
+- Blocks the UI during Outlook folder enumeration (can take 5-10 seconds)
+- Creates COM threading conflicts between UI thread and worker threads
+- Causes hangs when COM is already initialized in different threading mode
+
+**Evidence**:
+```python
+# ui/tk_app.py line 245-246
+import pythoncom
+pythoncom.CoInitialize()  # BLOCKING on UI thread!
+```
+
+### Issue 2: Dashboard Generation Blocking UI
+**Root Cause**: Dashboard generation ([_open_dashboard()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#387-421)) performs heavy I/O operations on the UI thread:
+- Generates HTML from database queries
+- Copies asset files
+- Writes large HTML file to disk
+
+These synchronous operations freeze the UI for several seconds.
+
+### Issue 3: Path Resolution in Frozen Mode
+**Potential Issue**: The app may not correctly resolve paths when frozen:
+- Asset paths (logos, icons)
+- Config file paths
+- Log file paths
+- Output directory paths
+
+### Issue 4: Missing Error Visibility
+The frozen app runs with `console=False`, so:
+- No console output for debugging
+- Users can't see error messages
+- Silent failures appear as "freezing"
+
+---
+
+## Proposed Changes
+
+### Component 1: Fix UI Threading Issues
+
+#### [MODIFY] [tk_app.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py)
+
+**Changes**:
+1. Move [_test_outlook_connection()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#237-290) logic to background thread
+2. Add loading indicator/spinner during async operations
+3. Move [_open_dashboard()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#387-421) heavy operations to background thread
+4. Use `root.after()` for UI updates from worker threads
+5. Add proper error dialogs for all exceptions
+
+**Rationale**: UI operations must NEVER block the main thread. All I/O and COM operations should run asynchronously.
+
+---
+
+### Component 2: Add Debug Console for Frozen Mode
+
+#### [NEW] [debug_console.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/debug_console.py)
+
+**Purpose**: Create in-app debug console that works in frozen mode with `console=False`.
+
+**Features**:
+- Capture all stdout/stderr
+- Display in scrollable text widget
+- Save to log file automatically
+- Show critical errors in popup dialogs
+
+---
+
+### Component 3: Fix Path Resolution for Frozen Mode
+
+#### [MODIFY] [startup_diagnostics.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/startup_diagnostics.py)
+
+**Changes**:
+1. Add helper function `get_resource_path(relative_path)` that works in both dev and frozen mode
+2. Export this function for use throughout the app
+3. Verify all asset paths use this helper
+
+**Example**:
+```python
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and frozen mode."""
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        base_path = sys._MEIPASS
+    else:
+        # Running in development
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+```
+
+---
+
+### Component 4: Enhanced Error Logging
+
+#### [MODIFY] [main.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/main.py)
+
+**Changes**:
+1. Add try/except around [run()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#504-507) call
+2. Log ALL exceptions to file with full traceback
+3. Show user-friendly error dialog before exit
+4. Redirect stdout/stderr to log file in frozen mode
+
+---
+
+### Component 5: Build Configuration Updates
+
+#### [MODIFY] [pcp_nexus_fixed.spec](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/pcp_nexus_fixed.spec)
+
+**Changes**:
+1. Add `console=True` variant for debugging (separate build)
+2. Ensure all runtime hooks are included
+3. Add more verbose build logging
+
+---
+
+## Implementation Steps
+
+### Phase 1: Add Debug Infrastructure (High Priority)
+1. Create `debug_console.py` with stdout/stderr capture
+2. Update [main.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/main.py) to log all exceptions to file
+3. Add error dialog popup for critical failures
+4. Test in both dev and frozen mode
+
+### Phase 2: Fix UI Threading (Critical)
+1. Refactor [_test_outlook_connection()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#237-290) to use threading
+2. Add loading dialog with progress indicator
+3. Refactor [_open_dashboard()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#387-421) to use threading
+4. Test all UI buttons for responsiveness
+
+### Phase 3: Fix Path Resolution
+1. Audit all asset/config path usage
+2. Replace with `get_resource_path()` helper
+3. Test asset loading in frozen mode
+
+### Phase 4: Rebuild and Test
+1. Build with [pcp_nexus_fixed.spec](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/pcp_nexus_fixed.spec)
+2. Test on development machine (frozen mode)
+3. Verify all buttons work without freezing
+4. Verify email processing works end-to-end
+
+---
+
+## Verification Plan
+
+### Automated Tests
+**NOTE**: This application does not currently have automated unit tests. All verification will be manual testing.
+
+### Manual Testing
+
+#### Test 1: UI Responsiveness (Button Freezing Issue)
+**Goal**: Verify no buttons cause UI to freeze
+
+**Steps**:
+1. Build the application using:
+   ```powershell
+   cd "C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator"
+   pyinstaller pcp_nexus_fixed.spec
+   ```
+2. Run the frozen executable:
+   ```powershell
+   cd dist\PCP_Nexus
+   .\PCP_Nexus.exe
+   ```
+3. Click **"Test Connection"** button in Settings tab
+4. **Expected**: Loading dialog appears, UI remains responsive
+5. **Expected**: Folder dropdowns populate after 3-5 seconds
+6. Click **"Open Dashboard"** button
+7. **Expected**: Dashboard generates in background, browser opens
+8. **Expected**: No UI freezing at any point
+
+**Success Criteria**:
+- ✅ All buttons respond immediately (no freezing)
+- ✅ Long operations show loading indicator
+- ✅ UI remains interactive during background tasks
+
+---
+
+#### Test 2: Email Processing End-to-End
+**Goal**: Verify email processing works in frozen mode
+
+**Prerequisites**:
+- Outlook must be running and configured
+- Test emails available in `Phase1_Examples_Fresh` directory
+
+**Steps**:
+1. Configure application in Settings tab:
+   - Outlook Account: (your email)
+   - Phase 1 Input: `Inbox`
+   - Phase 1 Output: `C:\Users\<YourName>\Documents\PCP_Test_Output`
+2. Inject test emails:
+   ```powershell
+   cd "C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator"
+   python inject_emails.py
+   ```
+3. In PCP Nexus, click **"Start Engine"**
+4. Watch Console tab for processing logs
+5. Wait 60 seconds
+6. Check output folder for generated PDFs
+
+**Expected**:
+- Console shows: `[INFO] Intake: Starting Phase 1 Scan`
+- Console shows: `[INFO] Intake: Found X unique envelopes`
+- Console shows: `[INFO] Audit: Integrity Verified`
+- Console shows: `[INFO] Clerk: Renamed to AX42*.pdf`
+- Output folder contains renamed PDFs
+
+**Success Criteria**:
+- ✅ Engine starts without errors
+- ✅ Emails detected and processed
+- ✅ PDFs downloaded and renamed
+- ✅ Files appear in output folder
+- ✅ No crashes or freezes
+
+---
+
+#### Test 3: Debug Logging (Error Visibility)
+**Goal**: Verify errors are logged properly in frozen mode
+
+**Steps**:
+1. Run frozen executable
+2. Deliberately cause an error (e.g., set invalid output path)
+3. Check log file:
+   ```powershell
+   notepad "$env:LOCALAPPDATA\PCP-Automation\debug_logs\startup_*.log"
+   ```
+4. **Expected**: Error is logged with full traceback
+5. **Expected**: User sees error dialog (not silent failure)
+
+**Success Criteria**:
+- ✅ All errors logged to file
+- ✅ Error dialogs appear for critical failures
+- ✅ No silent crashes
+
+---
+
+#### Test 4: Path Resolution (Assets)
+**Goal**: Verify assets load correctly in frozen mode
+
+**Steps**:
+1. Run frozen executable
+2. Check that UI displays correctly (no missing images)
+3. Open Dashboard
+4. **Expected**: Logo and all assets display correctly
+
+**Success Criteria**:
+- ✅ All UI assets load
+- ✅ Dashboard renders with images
+- ✅ No "file not found" errors
+
+---
+
+## Rollback Plan
+
+If fixes don't work or introduce new issues:
+1. Check debug logs at `%LOCALAPPDATA%\PCP-Automation\debug_logs`
+2. Build with `console=True` for debugging:
+   ```python
+   # In spec file, change:
+   console=True  # Shows console window for debugging
+   ```
+3. Revert to previous working commit if needed
+4. Document exact error for further investigation
+
+---
+
+## Success Criteria
+
+- [ ] No UI freezing on any button clicks
+- [ ] Test Connection button works without blocking
+- [ ] Dashboard generation doesn't freeze UI
+- [ ] Email processing works in frozen mode
+- [ ] All errors are logged to file
+- [ ] User sees helpful error dialogs (not silent failures)
+- [ ] All assets load correctly in frozen mode
+- [ ] Application works on clean machine without Python
+
+---
+
+## Questions for User
+
+> [!IMPORTANT]
+> **Question 1**: Which specific buttons are causing the freezing? (Test Connection? Dashboard? Start Engine? others?)
+> 
+> **Question 2**: Do you have access to the log files? If so, can you share the most recent log from `%LOCALAPPDATA%\PCP-Automation\debug_logs`?
+>
+> **Question 3**: For the email processing issue - does the engine start at all, or does it fail silently? Can you see any activity in the Console tab?

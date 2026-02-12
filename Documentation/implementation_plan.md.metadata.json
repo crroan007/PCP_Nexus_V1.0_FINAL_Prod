@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "Plan to add automatic Outlook email account detection on app startup. Adds _auto_detect_outlook_account() and _auto_test_connection() methods to tk_app.py, triggered after config loading.",
+  "updatedAt": "2026-02-04T18:12:14.143910900Z",
+  "version": "7"
+}

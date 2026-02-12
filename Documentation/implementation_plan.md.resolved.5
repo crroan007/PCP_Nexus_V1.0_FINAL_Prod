@@ -1,0 +1,113 @@
+# Report Standardization Plan
+
+## Goal
+Ensure all reports and dashboards use consistent logic for extracting and displaying data fields.
+
+---
+
+## Current Discrepancies Found
+
+### Metadata Field Names
+
+| Field | Dashboard | Exporter | Reporter | SharePoint |
+|-------|-----------|----------|----------|------------|
+| Envelope | `envelope_id` | `envelope_num` → `envelope_id` | `envelope_num` | [envelope](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#1030-1079) → `envelope_id` |
+| Lead Doc | `lead_doc` → `subject` | `lead_doc` → `lead_document` → `subject` | `lead_document` | `lead_doc` |
+| Orig File | `original_filename` | `original_filename` | `original_filename` | `original_filename` |
+| Job Num | [job_num](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#1337-1354) → `pcp_job_num` | ❌ not used | `pcp_job_num` | `pcp_job_num` → `old_job_num` |
+
+### Prefix Extraction Logic
+
+| Module | Orig Prefix | New/Dest Prefix |
+|--------|-------------|-----------------|
+| **Dashboard** | `original_filename[:4]` | Regex `^(AX\d{2})` from [filename](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter.py#451-465) |
+| **Exporter** | `original_filename[:4]` | Regex `^(AX\d{2})` from [filename](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter.py#451-465), fallback to `[:4]` |
+| **Reporter** | ❌ None | ❌ None |
+| **SharePoint** | `original_prefix` from metadata | `target_prefix` from metadata |
+
+### Comment Fields
+
+| Module | Has_Comments | Comments |
+|--------|--------------|----------|
+| **Dashboard** | ❌ None | ❌ None |
+| **Exporter** | `raw_comments` → [comments](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/intelligence_engine.py#22-42) | Same |
+| **Reporter** | ❌ None | ❌ None |
+| **SharePoint** | `action_flag` | `Accepted_Comments` |
+
+---
+
+## Proposed Standardization
+
+### 1. Unified Metadata Keys (Standard Names)
+```python
+STANDARD_KEYS = {
+    'envelope_id': ['envelope_num', 'envelope_id', 'envelope'],
+    'case_num': ['case_num'],
+    'lead_doc': ['lead_doc', 'lead_document', 'subject'],
+    'original_filename': ['original_filename'],
+    'new_filename': ['new_filename', 'filename'],
+    'pcp_job_num': ['pcp_job_num', 'job_num', 'old_job_num'],
+    'raw_comments': ['raw_comments', 'comments', 'accepted_comments'],
+}
+```
+
+### 2. Unified Prefix Extraction Function
+```python
+def extract_prefix(text, is_new=False):
+    """Extract 4-char prefix from filename/text."""
+    if not text or len(text) < 4:
+        return "-"
+    
+    if is_new:
+        # Try AXnn pattern first
+        import re
+        match = re.match(r'^(AX\d{2})', text)
+        if match:
+            return match.group(1)
+    
+    # Default: first 4 chars uppercase
+    return text[:4].upper()
+```
+
+### 3. Unified Comment Extraction
+```python
+def get_comments(metadata):
+    """Extract comments from metadata using standard fallbacks."""
+    comments = metadata.get('raw_comments') or metadata.get('comments') or metadata.get('accepted_comments') or ''
+    has_comments = "Yes" if comments and comments.strip() and comments.strip() != '-' else "No"
+    return has_comments, comments.strip() if comments else "-"
+```
+
+---
+
+## Files to Modify
+
+### [MODIFY] [dashboard_generator.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py)
+- Use `envelope_num` with fallback to `envelope_id`
+- Add comment columns to 24-hour activity log table header
+
+---
+
+### [MODIFY] [realtime_exporter.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/realtime_exporter.py)
+- Already updated with consistent logic ✅
+
+---
+
+### [MODIFY] [reporter.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/reporter.py)
+- Add `Original_Prefix` and `New_Prefix` columns
+- Add `Has_Comments` and `Comments` columns
+
+---
+
+### [MODIFY] [sharepoint_logger.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/sharepoint_logger.py)
+- Already comprehensive, uses metadata passed from caller ✅
+- Caller must pass correct `original_prefix` and `target_prefix`
+
+---
+
+## Verification Plan
+
+1. After changes, run application with test emails
+2. Compare dashboard 24-hour log prefixes with Excel export
+3. Compare Reporter daily CSV prefixes
+4. Verify SharePoint log prefixes match

@@ -1,0 +1,21 @@
+
+PCP Nexus Installation Guide (USB)
+==================================
+
+1. Copy the 'PCP_USB_Backup_v1.0' folder to C:\PCP-Nexus on the target machine.
+2. Install Python 3.10 or higher.
+3. Open a terminal in C:\PCP-Nexus and run:
+   pip install -r requirements.txt
+   (If requirements.txt is missing, install: pywin32 openpyxl PyPDF2 flet pikepdf)
+   
+4. Configure C:\ProgramData\PCP-Automation\config.json based on the station's paths.
+   (See Documentation for config template)
+
+5. Run the application:
+   cd Source
+   python main.py
+
+Documentation:
+- README.md: Overview
+- memory.md: Known issues and fix history
+- Documentation/Knowledge_Base/: Detailed logic manuals

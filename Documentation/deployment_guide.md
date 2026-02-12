@@ -1,0 +1,80 @@
+# PCP Nexus - Quick Production Deployment
+
+**Fastest, safest method: Folder copy + Python install**
+
+---
+
+## Option 1: Folder Copy (Recommended - Zero Compilation Risk)
+
+### On Source Computer (This PC)
+
+1. **Copy the Source Folder:**
+   ```
+   C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator\
+   ```
+   → Copy entire `Orchestrator` folder to USB drive or network share
+
+### On Target Computer
+
+2. **Install Python 3.11** (if not installed):
+   - Download: https://www.python.org/downloads/release/python-3119/
+   - **CHECK** "Add Python to PATH" during install
+
+3. **Copy Folder to Target:**
+   ```
+   C:\PCP-Nexus\Orchestrator\
+   ```
+
+4. **Install Dependencies (Run as Admin):**
+   ```powershell
+   cd C:\PCP-Nexus\Orchestrator
+   pip install pywin32 easyocr openpyxl customtkinter
+   ```
+
+5. **Create Desktop Shortcut:**
+   - Target: `python "C:\PCP-Nexus\Orchestrator\main.py"`
+   - Start in: `C:\PCP-Nexus\Orchestrator`
+   - **Check "Run as administrator"** in Properties > Advanced
+
+6. **First Launch:**
+   - Double-click shortcut
+   - Accept UAC prompt
+   - Configure Outlook settings in app
+
+---
+
+## Option 2: Build Installer (More Setup Time)
+
+If you want a proper `.exe` installer:
+
+```powershell
+cd "C:\Homebrew Apps\PCP New\PCP Mobile Work\PCP_LEAN_DEV_TRANSFER\Source\Orchestrator"
+pyinstaller --clean pcp_nexus_fixed.spec
+```
+
+Then use Inno Setup to package `dist\PCP_Nexus\` into an installer.
+
+---
+
+## Pre-Flight Checklist for Target PC
+
+| Requirement | How to Verify |
+|-------------|---------------|
+| Windows 10/11 x64 | `winver` |
+| Outlook Classic installed | Check Start menu |
+| Admin access | Can run as Administrator |
+| Python 3.11 | `python --version` |
+| Network/Internet | For pip install |
+
+---
+
+## Post-Install Verification
+
+1. Launch app → UAC prompt appears
+2. Outlook account auto-detects (if Outlook running)
+3. Start engine → processes test email
+4. Check `C:\ProgramData\PCP-Automation\Output\` for CSV/Excel
+
+---
+
+**Estimated Time:** 10-15 minutes with Option 1

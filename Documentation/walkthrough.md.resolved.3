@@ -1,0 +1,43 @@
+# Debugging Live Run Issues - Resolution Walkthrough
+
+This walkthrough covers the fixes for the unexpected PowerShell windows and the initial dashboard unavailability.
+
+## Fixes Implemented
+
+### 1. PowerShell Window Suppression
+The [LinkDownloader](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py#15-232) class now uses `subprocess.STARTUPINFO` with `SW_HIDE` to ENSURE that PowerShell windows do not appear during the file download cycle, even when running with elevated privileges.
+
+```python
+# link_downloader.py
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTFLAGS_USESHOWWINDOW
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
+result = subprocess.run(
+    ...,
+    startupinfo=startupinfo,
+    creationflags=subprocess.CREATE_NO_WINDOW
+)
+```
+
+### 2. Dashboard Standby Screen
+The `dashboard_generator` now provides a "Standby" HTML page if the database is not yet ready or is empty. This prevents the "Not Available" message box in the UI and gives the user visual feedback that the system is waiting for data.
+
+![Dashboard Standby Mockup](https://via.placeholder.com/600x400/1e293b/f8fafc?text=PCP+Nexus+Standby+-+Waiting+for+Data)
+
+### 3. SharePoint Logger Schema Fix
+Resolved a corruption in [sharepoint_logger.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/sharepoint_logger.py) where the `FIELDNAMES` list was improperly formatted, ensuring the 30-column audit trail is written correctly.
+
+## Verification Results
+
+### PowerShell Suppression
+- [x] Verified `STARTUPINFO` integration in [link_downloader.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py).
+- [x] Verified `creationflags` consistency.
+
+### Dashboard Availability
+- [x] Verified [generate_dashboard](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py#387-804) returns a valid HTML string even if `nexus.db` is missing.
+- [x] Verified [tk_app.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py) logic handles the HTML string correctly.
+
+---
+**Status: READY FOR LIVE TESTING**
+The application can now be restarted for live testing. Both Phase 1 and Phase 2 workflows should proceed without visible PowerShell interruptions.

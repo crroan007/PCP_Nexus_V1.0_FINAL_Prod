@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_TASK",
+  "summary": "Task checklist for investigating and fixing runtime issues in the installed PCP Nexus application. The app launches successfully but has email processing failures and UI freezing problems.",
+  "updatedAt": "2026-02-04T04:14:56.306511200Z"
+}

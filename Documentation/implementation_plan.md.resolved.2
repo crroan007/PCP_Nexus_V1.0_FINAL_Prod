@@ -1,0 +1,36 @@
+# Live Run Issue Resolution
+
+This plan addresses the two critical issues reported during live testing:
+1. **PowerShell Windows Popups**: Occurring during email processing/downloading.
+2. **Dashboard Unavailable**: Reporting "not available yet" even after mail has been processed.
+
+## Proposed Changes
+
+### [Component] Link Downloader
+#### [MODIFY] [link_downloader.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py)
+*   Enhance concealment of PowerShell windows using `subprocess.STARTUPINFO`.
+*   Ensure `creationflags` are correctly applied for maximum concealment on Windows.
+
+### [Component] SharePoint Logger
+#### [MODIFY] [sharepoint_logger.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/sharepoint_logger.py)
+*   Fix schema corruption in `FIELDNAMES` (remove accidental literal `\n` or backticks).
+*   Ensure the 30-column schema is cleanly implemented.
+
+### [Component] Dashboard Generator
+#### [MODIFY] [dashboard_generator.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py)
+*   Improve [generate_dashboard](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/dashboard_generator.py#362-772) to return a "Waiting for Data" HTML template instead of `None` when the database is empty or the table is missing. 
+*   This ensures the "Open Dashboard" button always works and provides feedback to the user.
+
+### [Component] UI App
+#### [MODIFY] [tk_app.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py)
+*   Adjust [_open_dashboard](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/ui/tk_app.py#478-531) to handle the case where the file is created but empty, or ensure it uses the newly improved generator.
+
+## Verification Plan
+
+### Automated Verification
+*   Execute a mock download to verify no PowerShell window appears.
+*   Check the dashboard before any data is processed to verify the "Waiting for Data" screen.
+
+### Manual Verification
+*   User will run the app as Administrator and confirm that no PowerShell windows pop up during the "Hunter" cycle.
+*   User will verify the Dashboard opens correctly even before the first email is processed.

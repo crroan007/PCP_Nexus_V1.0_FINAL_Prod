@@ -1,0 +1,34 @@
+# Live Run Issue Resolution & Logging Fix
+
+This plan addresses the "Move to Exceptions" failure, the misdirected real-time logs, and the verification of comment extraction.
+
+## Proposed Changes
+
+### [Component] App Paths
+#### [MODIFY] [app_paths.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/app_paths.py)
+*   Modify [logs_dir()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/app_paths.py#66-68) to check for an environment variable `PCP_LOGS_DIR` before defaulting to the base directory.
+*   This allows the application to respect the [config.json](file:///C:/ProgramData/PCP-Automation/config.json) path (handled by [main.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/main.py) setting the env var).
+
+### [Component] Main Entry Point
+#### [MODIFY] [main.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/main.py)
+*   Update [main()](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/main.py#16-75) to read the log path from [config.json](file:///C:/ProgramData/PCP-Automation/config.json) and set `PCP_LOGS_DIR` before any agents are initialized.
+
+### [Component] Hunter Agent
+#### [MODIFY] [hunter_v2.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py)
+*   (Completed) Fixed variable scoping in [create_job](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/core/job_manager.py#124-145) calls.
+*   Enhanced logging for the intelligence phase to capture exactly what was parsed as a comment.
+
+### [Component] Link Downloader
+#### [MODIFY] [link_downloader.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py)
+*   (Completed) Fixed `subprocess` constant typo.
+
+## Verification Plan
+
+### Automated Verification
+*   **Log Redirection**: Run the app and verify logs appear in `C:\Homebrew Apps\PCP New\Logs`.
+*   **Comment Accuracy**: Execute a diagnostic script `verify_comments.py` to dump DB metadata for recent jobs and compare with user's table.
+
+### Manual Verification
+*   User validates that logs are updating in real-time in the requested folder.
+*   User confirms that the "Accepted Comments" in the database/activity log match the actual PDF content.
+

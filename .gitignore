@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Build & dist
+build/
+dist/
+*.spec
+*.exe
+*.msi
+
+# Diagnostic scripts (one-off test tools)
+diag_*.py
+monitor_*.py
+backfill_csv.py
+fix_case.py
+fix_git_case.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs (runtime generated)
+*.log
+
+# Database (runtime generated)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Local config (machine-specific)
+config.json
+
+# Sensitive
+*.env
+credentials/
+
+# Runtime data dirs
+Source/Archive/
+Source/Output/
+Source/Staging/
+Source/data/
+
+# Agent/AI workspace
+.agent/
+.gemini/
+
+# Orphaned test emails
+emails that didn't make it/

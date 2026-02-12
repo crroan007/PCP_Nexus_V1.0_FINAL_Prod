@@ -1,0 +1,69 @@
+# PCP Nexus Installed Version Runtime Issues
+
+## Current Objective
+Debug and fix the installed version of PCP Nexus that launches but fails to process emails correctly and freezes on certain UI interactions.
+
+## Known Issues
+- ✅ App launches successfully (Tcl/Tk bundling fixed)
+- ❌ Email processing not working correctly
+- ❌ UI freezes when hitting certain buttons
+
+---
+
+## Tasks
+
+### [x] Phase 1: Issue Investigation
+- [x] Locate current source code and build artifacts
+- [x] Identify which buttons cause freezing (Test Connection, Dashboard)
+- [x] Compare dev version vs installed version behavior
+- [x] Review debug logs from installed version
+- [x] Test email processing flow step-by-step
+
+### [x] Phase 2: Root Cause Analysis
+- [x] Identified COM threading conflicts in UI thread
+- [x] Identified path resolution potential issues
+- [x] Verified Outlook COM needs thread safety
+- [x] Found threading/async issues in button handlers
+- [x] Config loading appears OK, error visibility is the issue
+
+### [x] Phase 3: Fix Implementation
+- [x] Created app_paths.py unified path module
+- [x] Fixed Outlook store resolution for email addresses
+- [x] Added auto-fallback for output paths  
+- [x] Fixed UI freeze points (threading for Test Connection, Dashboard)
+- [x] Fixed console drain with bounded processing
+- [x] Fixed build.ps1 PowerShell script
+- [x] Cleaned up requirements.txt (removed pythoncom)
+
+### [x] Phase 4: Validation
+- [x] Build completed successfully with fixed spec file
+- [x] Test installed version on development machine (Fixed pythoncom error)
+- [x] Verify email processing works end-to-end (Fixed PowerShell popups)
+- [x] Verify all UI buttons respond correctly (Fixed Dashboard availability)
+- [x] Fixed SharePoint Logger schema corruption
+### [x] Phase 5: Debugging Exception Loop (RESOLVED)
+- [x] Analyze [agent_trace.log](file:///C:/ProgramData/PCP-Automation/Logs/agent_trace.log) for Move to Exceptions triggers
+- [x] Identify `subprocess` constant typo in [link_downloader.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/utils/link_downloader.py)
+- [x] Identify variable shadowing in [hunter_v2.py](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py)
+- [x] Implement fixes for downloader and variable scoping
+- [x] Verify intake flow with live session logic
+- [x] Verify dashboard updates correctly with new data
+
+### [x] Phase 6: Operational Refinement
+- [x] Fix log redirection to respect [config.json](file:///C:/ProgramData/PCP-Automation/config.json) (`C:\Homebrew Apps\PCP New\Logs`)
+- [x] Verify "Accepted Comments" logging against PDF content
+- [x] Diagnostic script confirmed IDs 153-159 processed correctly
+
+### [x] Phase 8: Real-Time Data Export
+- [x] Create `realtime_exporter.py` for live CSV generation
+- [x] Integrate with `job_manager.py` to export on status updates
+- [x] Change dashboard refresh to 10 seconds (from 4s)
+- [x] Add "Export CSV" button to 24-hour activity log with auto-download
+- [x] Make filenames in activity log clickable (file://) links
+- [x] Add Excel (.xlsx) export alongside CSV
+- [x] Install openpyxl dependency
+- [x] Style Excel headers and auto-adjust column widths
+- [x] Add Has_Comments and Comments columns
+- [x] Fix prefix extraction to properly parse all filename patterns
+- [x] Fixed CSV export header to match 13-column table structure
+- [x] Test dashboard export button downloads correctly

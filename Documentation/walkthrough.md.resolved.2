@@ -1,0 +1,32 @@
+# Verification: Naming Logic & Stability Fixes
+
+I have corrected the critical discrepancies between the Project Specifications and the live automated behavior.
+
+## Accomplishments
+
+### 1. Unified Configuration Access
+- **Issue**: [HunterV2](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter_v2.py#17-1354) was looking for `Phases.Phase1.RenameMap` which didn't exist in the optimized [config.json](file:///C:/ProgramData/PCP-Automation/config.json).
+- **Fix**: Re-routed all naming lookup logic to the top-level [naming_rules](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/clerk.py#24-45) key used by the [Clerk](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/clerk.py#9-131) and [Auditor](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/auditor.py#20-347).
+
+### 2. Restored Phase 1 (Affidavit) Workflow
+- **Issue**: Affidavits were being named `AX40[EnvelopeID].pdf` (Petition naming).
+- **Fix**: Re-enabled the transformation rule (e.g., `AX02` -> `AX42`) and ensured the **PCP Job Number** (e.g., `A25B...`) is extracted instead of the Envelope ID.
+
+### 3. Robust Prefix Parsing
+- **Optimization**: The [Hunter](file:///C:/Homebrew%20Apps/PCP%20New/PCP%20Mobile%20Work/PCP_LEAN_DEV_TRANSFER/Source/Orchestrator/agents/hunter.py#27-686) now cross-references the email metadata with the attachment filename. Even if the attachment is named just `A25C...pdf`, the system correctly identifies it as an `AX02` or `AX03` based on the Outlook folder it originated from.
+
+## Verified Logic Trace
+
+| Source Prefix | Input File | Current (Fixed) Output | Status |
+| :--- | :--- | :--- | :--- |
+| **AX02** | `AX02A25C07678.pdf` | `AX42A25C07678.pdf` | **CORRECT** |
+| **AX09** | `A25C07768.pdf` | `AX89A25C07768.pdf` | **CORRECT** |
+| **AX40** | `Envelope_110548949` | `AX40110548949.pdf` | **CORRECT (Phase 2)** |
+
+## Manual Review
+
+Please check the **PCP Nexus Dashboard** (Documents/PCP_Output/dashboard.html). You should see:
+1. New logs showing `Naming Logic: Phase 1 (AX02->AX42) + Job A25C...`.
+2. Files appearing in your `Documents` folder with the target `AX42/43/47/89` prefixes.
+
+![Dashboard Proof](file:///C:/Homebrew%20Apps/PCP%20New/Dashboard/dashboard.html)

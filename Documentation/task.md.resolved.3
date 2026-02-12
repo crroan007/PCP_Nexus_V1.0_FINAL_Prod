@@ -1,0 +1,43 @@
+# PCP Nexus Installed Version Runtime Issues
+
+## Current Objective
+Debug and fix the installed version of PCP Nexus that launches but fails to process emails correctly and freezes on certain UI interactions.
+
+## Known Issues
+- ✅ App launches successfully (Tcl/Tk bundling fixed)
+- ❌ Email processing not working correctly
+- ❌ UI freezes when hitting certain buttons
+
+---
+
+## Tasks
+
+### [x] Phase 1: Issue Investigation
+- [x] Locate current source code and build artifacts
+- [x] Identify which buttons cause freezing (Test Connection, Dashboard)
+- [x] Compare dev version vs installed version behavior
+- [x] Review debug logs from installed version
+- [x] Test email processing flow step-by-step
+
+### [x] Phase 2: Root Cause Analysis
+- [x] Identified COM threading conflicts in UI thread
+- [x] Identified path resolution potential issues
+- [x] Verified Outlook COM needs thread safety
+- [x] Found threading/async issues in button handlers
+- [x] Config loading appears OK, error visibility is the issue
+
+### [x] Phase 3: Fix Implementation
+- [x] Created app_paths.py unified path module
+- [x] Fixed Outlook store resolution for email addresses
+- [x] Added auto-fallback for output paths  
+- [x] Fixed UI freeze points (threading for Test Connection, Dashboard)
+- [x] Fixed console drain with bounded processing
+- [x] Fixed build.ps1 PowerShell script
+- [x] Cleaned up requirements.txt (removed pythoncom)
+
+### [/] Phase 4: Validation
+- [x] Build completed successfully with fixed spec file
+- [/] Test installed version on development machine
+- [ ] Verify email processing works end-to-end
+- [ ] Verify all UI buttons respond correctly
+- [ ] Test on clean VM if needed

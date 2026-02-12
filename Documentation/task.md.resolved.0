@@ -1,0 +1,40 @@
+# PCP Nexus Installed Version Runtime Issues
+
+## Current Objective
+Debug and fix the installed version of PCP Nexus that launches but fails to process emails correctly and freezes on certain UI interactions.
+
+## Known Issues
+- ✅ App launches successfully (Tcl/Tk bundling fixed)
+- ❌ Email processing not working correctly
+- ❌ UI freezes when hitting certain buttons
+
+---
+
+## Tasks
+
+### [ ] Phase 1: Issue Investigation
+- [ ] Locate current source code and build artifacts
+- [ ] Identify which buttons cause freezing
+- [ ] Compare dev version vs installed version behavior
+- [ ] Review debug logs from installed version
+- [ ] Test email processing flow step-by-step
+
+### [ ] Phase 2: Root Cause Analysis
+- [ ] Identify missing dependencies or imports
+- [ ] Check for path resolution issues in frozen mode
+- [ ] Verify Outlook COM automation in frozen mode
+- [ ] Check for threading/async issues causing freezes
+- [ ] Validate config file loading
+
+### [ ] Phase 3: Fix Implementation
+- [ ] Fix email processing logic for frozen mode
+- [ ] Fix UI freezing issues
+- [ ] Add better error handling/logging
+- [ ] Test fixes in development mode
+- [ ] Rebuild installer with fixes
+
+### [ ] Phase 4: Validation
+- [ ] Test installed version on development machine
+- [ ] Verify email processing works end-to-end
+- [ ] Verify all UI buttons respond correctly
+- [ ] Test on clean VM if needed

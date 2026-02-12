@@ -1,0 +1,98 @@
+{
+  "title": "PCP Nexus Document Automation System",
+  "summary": "Comprehensive knowledge base for the PCP Nexus platform. Covers architecture (6-thread model), Phase 1 vs Phase 2 workflows, and Feb 2026 intelligence updates. Includes documented logic for 30-column audit logging, Auditor OCR (EasyOCR), standardized reporting logic (differentiated CSV/Excel formats), and regex-driven metadata extraction. Covers critical live-run fixes: verified aggressive PowerShell concealment (STARTF_USESHOWWINDOW), dashboard standby templates, Startup Diagnostics Console, and verified resolution of 'Instant Exception' and 'Server execution failed' failures. Features maintenance utilities for elevated database clearing and Outlook reset, documents the implementation of the RealtimeExporter (live CSV/Excel/Comment extraction), and outlines Feb 4, 2026 standardized cross-module reporting suite (unified metadata keys/prefixes), dashboard navigation enhancements (direct output folder access via file:/// protocol), and validated procedures for a 'Slim Transfer' (Full Source excluding large venv + LLM Context) to external media (E: PCP drive).",
+  "references": [
+    {
+      "type": "conversation_id",
+      "value": "9e852bf3-da9a-4db0-be3e-33de995c5b4d"
+    },
+    {
+      "type": "conversation_id",
+      "value": "0d132d54-cd2f-46a8-9af2-a53b03861726"
+    },
+    {
+      "type": "conversation_id",
+      "value": "06eabd1a-7b3c-442a-9777-a8596696b052"
+    },
+    {
+      "type": "conversation_id",
+      "value": "a1b2c3d4-e5f6-4a5b-9c8d-7e6f5g4h3i2j"
+    },
+    {
+      "type": "conversation_id",
+      "value": "bot-f89c893d-8fd2-404a-9ec5-d3cdadb7615f"
+    },
+    {
+      "type": "conversation_id",
+      "value": "6c99d582-6abb-45f1-9b0c-f2937f5ef927"
+    },
+    {
+      "type": "conversation_id",
+      "value": "bot-dc0a6a2a-e2f4-4e20-9cb5-87bd8998dae7"
+    },
+    {
+      "type": "conversation_id",
+      "value": "bot-41f10c5d-2067-48d7-938e-f67f439827ad"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\sharepoint_logger.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\agents\\hunter_v2.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\intelligence_engine.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\utils\\link_downloader.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\main.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\app_paths.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\dashboard_generator.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\tamper_guard.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\engine.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\agents\\clerk.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\agents\\auditor.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\reporter.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\backup_service.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\job_manager.py"
+    },
+    {
+      "type": "file",
+      "value": "C:\\Homebrew Apps\\PCP New\\PCP Mobile Work\\PCP_LEAN_DEV_TRANSFER\\Source\\Orchestrator\\core\\realtime_exporter.py"
+    }
+  ]
+}
